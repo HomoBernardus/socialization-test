@@ -1,0 +1,841 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<title>社会化程度测试 🎭 你在社会场域的生存技能</title>
+<style>
+  :root {
+    --bg1: #FFF7F0;
+    --bg2: #FFEBE2;
+    --card: #FFFFFF;
+    --ink: #4A3F3A;
+    --muted: #9A897E;
+    --coral: #FF8A7A;
+    --coral-deep: #FF6A88;
+    --grad: linear-gradient(135deg, #FF9A8B 0%, #FF6A88 100%);
+    --soft: #FFE0D6;
+    --soft-bg: #FFF3EE;
+    --gold: #E8A95B;
+    --shadow: 0 16px 48px rgba(255, 138, 122, .16);
+    --shadow-sm: 0 6px 20px rgba(255, 138, 122, .12);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+    color: var(--ink);
+    background: linear-gradient(160deg, var(--bg1) 0%, var(--bg2) 100%);
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px 16px;
+    position: relative;
+    overflow-x: clip;
+  }
+
+  .blob {
+    position: fixed;
+    border-radius: 50%;
+    filter: blur(2px);
+    opacity: .5;
+    pointer-events: none;
+    z-index: 0;
+    animation: float 8s ease-in-out infinite;
+  }
+  .blob.b1 { width: 180px; height: 180px; background: #FFD9C9; top: 6%; left: -40px; }
+  .blob.b2 { width: 130px; height: 130px; background: #FFE9C9; bottom: 10%; right: -30px; animation-delay: -3s; }
+  .blob.b3 { width: 90px; height: 90px; background: #FFD0E0; top: 40%; right: 6%; animation-delay: -5s; }
+
+  @keyframes float {
+    0%, 100% { transform: translateY(0) translateX(0); }
+    50% { transform: translateY(-18px) translateX(8px); }
+  }
+
+  .app { width: 100%; max-width: 540px; position: relative; z-index: 1; }
+
+  .card {
+    background: var(--card);
+    border-radius: 28px;
+    box-shadow: var(--shadow);
+    padding: 34px 28px;
+  }
+
+  .screen { display: none; }
+  .screen.active { display: block; animation: rise .45s cubic-bezier(.22,1,.36,1); }
+  @keyframes rise {
+    from { opacity: 0; transform: translateY(18px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .center { text-align: center; }
+  h1.title { font-size: 23px; font-weight: 700; letter-spacing: 1px; }
+  .subtitle { color: var(--muted); font-size: 14px; margin-top: 8px; line-height: 1.7; }
+
+  /* 密码页 */
+  .lock-emoji { font-size: 52px; text-align: center; margin-bottom: 12px; }
+  .pwd-wrap { margin-top: 28px; display: flex; gap: 10px; align-items: center; justify-content: center; }
+  .pwd-input {
+    width: 180px; text-align: center; font-size: 22px; letter-spacing: 10px;
+    padding: 12px 8px 12px 16px; border: 2px solid var(--soft); border-radius: 16px;
+    outline: none; background: #FFFDFC; color: var(--ink); transition: border-color .2s;
+  }
+  .pwd-input:focus { border-color: var(--coral); }
+  .btn {
+    border: none; cursor: pointer; font-family: inherit; font-weight: 600; color: #fff;
+    background: var(--grad); border-radius: 999px; padding: 14px 26px; font-size: 16px;
+    box-shadow: var(--shadow-sm); transition: transform .15s, box-shadow .15s, opacity .2s; letter-spacing: 1px;
+  }
+  .btn:active { transform: scale(.97); }
+  .btn:disabled { opacity: .55; cursor: default; }
+  .btn.ghost { background: transparent; color: var(--coral-deep); box-shadow: none; border: 2px solid var(--soft); }
+
+  .shake { animation: shake .45s; }
+  @keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    20%, 60% { transform: translateX(-8px); }
+    40%, 80% { transform: translateX(8px); }
+  }
+  .hint-error { color: #E8615B; font-size: 13px; margin-top: 12px; min-height: 18px; }
+
+  /* 欢迎页 */
+  .hero-emoji { font-size: 60px; text-align: center; margin-bottom: 8px; }
+  .tagline { color: var(--muted); font-size: 14.5px; margin-top: 12px; line-height: 1.8; }
+  .features { margin: 24px 0; display: grid; gap: 10px; }
+  .feature { display: flex; align-items: center; gap: 12px; background: var(--soft-bg); border-radius: 16px; padding: 12px 16px; font-size: 14px; line-height: 1.5; }
+  .feature .ic { font-size: 22px; }
+  .start-btn { width: 100%; padding: 16px; font-size: 17px; margin-top: 6px; }
+
+  /* 答题页 */
+  .quiz-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+  .q-count { font-size: 13px; color: var(--muted); font-weight: 600; }
+  .q-emoji { font-size: 24px; }
+  .progress-track { height: 8px; background: var(--soft); border-radius: 999px; overflow: hidden; margin-bottom: 22px; }
+  .progress-fill { height: 100%; background: var(--grad); border-radius: 999px; width: 0%; transition: width .4s cubic-bezier(.22,1,.36,1); }
+
+  .question { font-size: 19px; font-weight: 700; line-height: 1.55; margin-bottom: 20px; }
+
+  .options { display: grid; gap: 12px; }
+  .opt {
+    display: flex; align-items: flex-start; gap: 12px;
+    background: #FFFDFC; border: 2px solid var(--soft); border-radius: 18px;
+    padding: 14px 16px; cursor: pointer; font-size: 15px; line-height: 1.55;
+    color: var(--ink); transition: all .18s ease; text-align: left;
+  }
+  .opt .mark {
+    flex-shrink: 0; width: 22px; height: 22px; border-radius: 50%;
+    border: 2px solid #EDC7BB; display: grid; place-items: center;
+    font-size: 12px; color: transparent; transition: all .18s; margin-top: 1px;
+  }
+  .opt:hover { border-color: var(--coral); background: var(--soft-bg); }
+  .opt.selected { border-color: var(--coral); background: #FFF0EC; box-shadow: var(--shadow-sm); }
+  .opt.selected .mark { background: var(--grad); border-color: transparent; color: #fff; }
+
+  .quiz-nav { display: flex; gap: 12px; margin-top: 22px; }
+  .quiz-nav .btn { flex: 1; }
+  .btn.ghost { flex: 0 0 auto; padding: 14px 22px; }
+
+  /* 结果页 */
+  .result-head { text-align: center; }
+  .type-emoji { font-size: 58px; }
+  .type-name { font-size: 26px; font-weight: 800; margin-top: 6px; letter-spacing: 1px; }
+  .overall { color: var(--muted); font-size: 13.5px; margin-top: 8px; }
+
+  .summary {
+    margin: 20px 0 14px; background: var(--soft-bg); border-radius: 18px;
+    padding: 18px 18px; font-size: 16.5px; font-weight: 700; line-height: 1.7;
+    position: relative; text-align: center;
+  }
+  .summary::before { content: "“"; color: var(--coral); font-size: 30px; position: absolute; top: 6px; left: 12px; }
+  .summary::after { content: "”"; color: var(--coral); font-size: 30px; position: absolute; bottom: -4px; right: 12px; }
+
+  .kw-chips { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-bottom: 6px; }
+  .kw-chip { background: #fff; border: 2px solid var(--soft); border-radius: 999px; padding: 6px 14px; font-size: 13.5px; font-weight: 600; color: var(--coral-deep); }
+
+  .sub-type { text-align: center; color: var(--muted); font-size: 13px; margin: 12px 0 2px; }
+
+  .section-title { font-size: 16px; font-weight: 700; margin: 26px 0 12px; display: flex; align-items: center; gap: 8px; }
+
+  .aspect { background: #FFFDFC; border: 2px solid var(--soft); border-radius: 16px; padding: 14px 16px; margin-bottom: 10px; font-size: 14px; line-height: 1.7; }
+  .aspect b.tag { display: inline-block; margin-right: 6px; }
+  .aspect.good b.tag { color: #5BA87A; }
+  .aspect.blind b.tag { color: #E8844C; }
+
+  .advice { background: #FFF4E8; border: 2px dashed #FFC9A8; border-radius: 16px; padding: 14px 16px; font-size: 14px; line-height: 1.7; }
+  .advice b { color: #E8844C; }
+
+  .formation { color: var(--muted); font-size: 13px; line-height: 1.7; margin-top: 14px; padding: 0 4px; }
+  .formation b { color: var(--ink); font-weight: 600; }
+
+  .egg {
+    margin-top: 18px; background: linear-gradient(135deg, #FFF6E0, #FFEDE0);
+    border: 2px dashed var(--gold); border-radius: 16px; padding: 14px 16px;
+    font-size: 14px; line-height: 1.7;
+  }
+  .egg .egg-title { font-weight: 800; color: #C98A3B; margin-bottom: 6px; }
+
+  .radar-card { background: #FFFDFC; border: 2px solid var(--soft); border-radius: 20px; padding: 10px 6px; }
+  .radar-card svg { display: block; margin: 0 auto; width: 100%; max-width: 360px; height: auto; }
+
+  .dim-card { background: #FFFDFC; border: 2px solid var(--soft); border-radius: 16px; padding: 13px 16px; margin-bottom: 10px; }
+  .dim-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 7px; }
+  .dim-name { font-weight: 700; font-size: 14.5px; }
+  .dim-score { font-weight: 800; font-size: 16px; color: var(--coral-deep); }
+  .dim-bar { height: 7px; background: var(--soft); border-radius: 999px; overflow: hidden; margin-bottom: 9px; }
+  .dim-bar-fill { height: 100%; background: var(--grad); border-radius: 999px; width: 0; transition: width .8s cubic-bezier(.22,1,.36,1); }
+  .dim-review { color: var(--muted); font-size: 13px; line-height: 1.65; }
+
+  .result-actions { display: flex; gap: 12px; margin-top: 24px; }
+  .result-actions .btn { flex: 1; }
+
+  .footer-note { text-align: center; color: var(--muted); font-size: 12px; margin-top: 22px; line-height: 1.7; }
+
+  @media (max-width: 420px) {
+    .card { padding: 26px 20px; border-radius: 24px; }
+    .question { font-size: 17.5px; }
+    .type-name { font-size: 23px; }
+  }
+</style>
+</head>
+<body>
+  <div class="blob b1"></div>
+  <div class="blob b2"></div>
+  <div class="blob b3"></div>
+
+  <div class="app">
+    <div class="card">
+
+      <!-- 密码页 -->
+      <section class="screen active" id="screen-password">
+        <div class="lock-emoji">🔒</div>
+        <div class="center">
+          <h1 class="title">测试你的社会化程度</h1>
+          <p class="subtitle">看清你在饭局、群聊、电梯这些日常场景里的<br/>「生存技能」，输入密码开启 🎭</p>
+        </div>
+        <div class="pwd-wrap" id="pwd-wrap">
+          <input class="pwd-input" id="pwd-input" type="password" inputmode="numeric" maxlength="4" placeholder="····" />
+          <button class="btn" id="pwd-btn">进入</button>
+        </div>
+        <p class="hint-error center" id="pwd-hint"></p>
+      </section>
+
+      <!-- 欢迎页 -->
+      <section class="screen" id="screen-welcome">
+        <div class="hero-emoji">🎭</div>
+        <div class="center">
+          <h1 class="title">测试你的社会化程度</h1>
+          <p class="tagline">
+            社会化，不是内向或外向，而是你在社会场域里的<br/>
+            「生存技能」——对规则、人情、协作的适应与熟练程度。
+          </p>
+        </div>
+        <div class="features">
+          <div class="feature"><span class="ic">🍶</span> 24 道真实场景题（饭局劝酒、群聊、见家长……）</div>
+          <div class="feature"><span class="ic">🎭</span> 测出属于你的「社会化人格」类型</div>
+          <div class="feature"><span class="ic">🧭</span> 五维自评雷达图 + 一份温暖的升级建议</div>
+        </div>
+        <button class="btn start-btn" id="start-btn">开始测试 →</button>
+      </section>
+
+      <!-- 答题页 -->
+      <section class="screen" id="screen-quiz">
+        <div class="quiz-top">
+          <span class="q-count" id="q-count">第 1 / 24 题</span>
+          <span class="q-emoji" id="q-emoji"></span>
+        </div>
+        <div class="progress-track"><div class="progress-fill" id="progress-fill"></div></div>
+        <div class="question" id="question-text"></div>
+        <div class="options" id="options"></div>
+        <div class="quiz-nav">
+          <button class="btn ghost" id="prev-btn">← 上一题</button>
+          <button class="btn" id="next-btn">下一题</button>
+        </div>
+      </section>
+
+      <!-- 结果页 -->
+      <section class="screen" id="screen-result">
+        <div class="result-head">
+          <div class="type-emoji" id="type-emoji"></div>
+          <div class="type-name" id="type-name"></div>
+          <div class="overall" id="overall"></div>
+        </div>
+
+        <div class="summary" id="result-summary"></div>
+        <div class="kw-chips" id="result-keywords"></div>
+        <div class="sub-type" id="sub-type"></div>
+
+        <div class="section-title">🧩 典型行为场景</div>
+        <div class="aspect" id="result-scene"></div>
+
+        <div class="section-title">💪 你的社会化优势</div>
+        <div class="aspect good" id="result-strength"></div>
+
+        <div class="section-title">🕳️ 你的社会化盲点</div>
+        <div class="aspect blind" id="result-blind"></div>
+
+        <div class="section-title">🌱 一条升级建议</div>
+        <div class="advice" id="result-advice"></div>
+
+        <div class="formation" id="result-formation"></div>
+
+        <div class="egg" id="result-egg" style="display:none;">
+          <div class="egg-title">🎁 隐藏彩蛋</div>
+          <div id="egg-text"></div>
+        </div>
+
+        <div class="section-title">🧭 社会化程度自评维度表</div>
+        <div class="radar-card" id="radar-card"></div>
+        <div id="dim-cards"></div>
+
+        <div class="result-actions">
+          <button class="btn ghost" id="restart-btn">再测一次</button>
+          <button class="btn" id="share-btn">分享给朋友 💌</button>
+        </div>
+        <p class="footer-note">本测试仅供娱乐与自我觉察参考，不构成心理诊断。<br/>这是一种倾向，不是标签。愿你在自己的节奏里，越来越自在地发光 ✨</p>
+      </section>
+
+    </div>
+  </div>
+
+<script>
+(function () {
+  'use strict';
+
+  var PASSWORD = '4567';
+
+  /* ============ 6 种社会化人格（含五维签名） ============ */
+  // 五维：0规则敏感度 1人情解读力 2冲突处理 3自我暴露分寸 4群体融入速度
+  var TYPES = {
+    rj: { name: '人精型选手', emoji: '🎯', sig: [88, 92, 86, 90, 70] },
+    sk: { name: '社恐但礼貌型', emoji: '🙇', sig: [85, 62, 45, 72, 28] },
+    ys: { name: '野生社交家', emoji: '🔥', sig: [38, 55, 60, 30, 92] },
+    gz: { name: '规则说明书型', emoji: '📋', sig: [95, 40, 42, 55, 45] },
+    xz: { name: '选择性社会化', emoji: '🎭', sig: [62, 75, 80, 85, 55] },
+    jn: { name: '社交节能模式', emoji: '🔋', sig: [45, 50, 35, 60, 22] }
+  };
+
+  var PROFILES = {
+    rj: {
+      summary: '别人在玩剧本杀，你在玩「人生这场社交局」——而且已经通关了新手教程。',
+      keywords: ['通透', '有分寸', '双商在线'],
+      scene: '饭局上你是那个能同时照顾两边的人：敬酒点到为止，长辈来了会起身，冷场时抛梗，朋友尴尬时递台阶。',
+      strength: '你对「场面」的读取快而准，知道什么场合说什么话、做到什么程度。你是团队里让人安心的存在，很多事到你手里就顺了。',
+      blind: '太顺滑有时会显得「滴水不漏」，反而让人看不清真实的你；过度周全也容易累到自己，把社交变成一场表演。',
+      advice: '偶尔可以「漏」一点——露出真实的疲惫或笨拙，反而会让人更想靠近你。试着对一两个信任的人，卸下那层「周到」的面具。',
+      formation: '可能来自比较早就要「看脸色」长大的环境，或者长期处在需要多方协调的职业里（销售、行政、公关、乙方……）。当然，也可能只是你天生对人敏感。是哪种，只有你自己知道。'
+    },
+    sk: {
+      summary: '你不是不会社交，你只是把所有的社交额度，都拿来换了一句「谢谢、辛苦了」。',
+      keywords: ['礼貌', '边界清晰', '慢热'],
+      scene: '电梯里遇到领导，你会礼貌问好然后盯着楼层数；群消息你会认真看，但只在别人@你时才回；饭局上你吃得很少，回得很多——「好的、可以、没问题」。',
+      strength: '你很少越界，几乎不冒犯人，礼数周全。因为话少，你显得可靠、值得托付，很多人愿意把重要的事交给你。',
+      blind: '过度礼貌会让你被当成「隐形人」，你的需求和建议容易被忽略；有时别人想和你走近，却被你的客气挡在了门外。',
+      advice: '下次被人夸或被人需要时，别只说「没有没有」，试着多补一句「谢谢，其实我也挺喜欢做这个的」。多暴露一点点，礼貌才有温度。',
+      formation: '可能来自一个比较注重规矩和体面的成长环境，或者你曾在「说错话」上吃过亏，于是学会了少说少错。也可能，你只是需要更多时间，把对方变成「安全的人」。'
+    },
+    ys: {
+      summary: '给你一个 Wi-Fi，你能把一整个陌生群聊，聊成自己的主场。',
+      keywords: ['热情', '自来熟', '气氛组'],
+      scene: '第一次见面你就记住了所有人的名字（和狗的名字）；KTV 里第一个拿麦，冷场时第一个开口，散场时还能顺手攒出下一场。',
+      strength: '你的热情是有感染力的，走到哪都能快速破冰、带起节奏。你让局子热闹，让新人放松，是朋友口中的「快乐开关」。',
+      blind: '热情来得快去得也快，有时分寸没拿捏好，会不小心越界、抢话或交浅言深，让慢热的人有点吃不消。',
+      advice: '把「我说」换成「你继续说」——热情的你只要稍微学会收一收、把话筒递给别人，魅力会直接翻倍。',
+      formation: '可能来自热闹、被充分鼓励表达的家庭，或者你一直身处需要「自来熟」的环境（社团、销售、集体生活）。你习惯了用热情开路，也习惯了被热情回应。'
+    },
+    gz: {
+      summary: '你的脑子里有一本「社交操作手册」，每一步都写得清清楚楚——只是有时候，生活不按手册来。',
+      keywords: ['认真', '守规矩', '讲道理'],
+      scene: '你会在回复前确认「这样说不冒犯吧」；送礼会查「第一次见对象父母该带什么」；遇到分歧，你第一反应是「我们先讲清楚规则」。',
+      strength: '你可靠、守信、有原则，事情交给你不会跑偏。在讲规则的环境里（职场流程、正式场合），你是那个让人放心的人。',
+      blind: '但人情世故里，很多时候「对错」没有「感受」重要。太讲规则，容易被当成「轴」或「不懂变通」，在需要讲情的场合吃亏。',
+      advice: '遇到「规则和感受」冲突时，试试先接一句感受（「我懂你现在很着急」），再谈道理。人先被接住了，才会听你的规则。',
+      formation: '可能来自一个「凡事讲道理、重规矩」的成长环境，或者你在规则明确、容错低的职业里待久了。规则曾保护过你，所以你很自然地信任它。'
+    },
+    xz: {
+      summary: '你在熟人面前是「人来疯」，在陌生人面前是「透明人」——这不是分裂，是你太清楚自己的社交开关在哪。',
+      keywords: ['分场合', '有选择', '收放自如'],
+      scene: '熟悉的小圈子你能嗨到散场，陌生的大局你安静观察；该你上的时候你上，不该你上的时候你精准隐身。',
+      strength: '你拥有「按需社交」的能力，能量用在刀刃上。你既能在关键时刻站出来，也能在该退的时候体面地退。',
+      blind: '选择性太强，容易让不熟的人误以为你高冷、难以接近；也可能因为太依赖「舒适区」，错过一些需要主动破圈的机会。',
+      advice: '给自己设一个「每月一次陌生局」的小任务，哪怕只是去坐坐。你的开关很灵敏，偶尔拨到「陌生」档，会发现新地图也很有意思。',
+      formation: '可能来自你需要同时应对「熟悉」和「陌生」两种截然不同场景的经历，也可能你从小就懂得「在不同的人面前是不同的我」。你学会了按对象调整自己。'
+    },
+    jn: {
+      summary: '你的社交电池容量不大，但每一格电，都留给了真正值得的人。',
+      keywords: ['低耗', '重质', '惜力'],
+      scene: '能发消息绝不见面，能文字绝不语音；群聊你常年潜水，但最好的朋友一个电话你就到。',
+      strength: '你把有限的精力花在少数重要关系上，所以你的关系往往很深、很真。你不凑热闹，也因此很少内耗。',
+      blind: '长期低功耗，会让你的「人脉」和「机会」变少；有些时候，一次简单的露面或回信，就能省掉后来很多的麻烦。',
+      advice: '不必强迫自己变外向，只做一件事：对「该回的消息」尽量当天回。这一个小动作，就能让很多人对你的印象悄悄变好。',
+      formation: '可能来自独处让你充电、热闹让你耗电的天性，也可能你在社交上经历过疲惫或失望，于是学会了「省着用自己」。'
+    }
+  };
+
+  /* ============ 五维自评简评 ============ */
+  var DIMS = ['规则敏感度', '人情解读力', '冲突处理', '自我暴露分寸', '群体融入速度'];
+  var DIM_REVIEWS = [
+    { high: '你对场合的潜规则很敏锐，通常知道「这时候该怎样做」。', mid: '你在意的是常识性礼数，关键场合会多留个心眼。', low: '你不爱被条条框框束缚，更相信真诚与直接。' },
+    { high: '你很会接住别人的言外之意，情绪雷达很灵敏。', mid: '你能读懂明显的好恶，但更深的暗示偶尔会漏掉。', low: '你习惯就事论事，有时会把客气话当真。' },
+    { high: '面对尴尬与分歧，你能稳住场面、递出台阶。', mid: '你不主动挑事，冲突来了也尽量和平化解。', low: '冲突让你紧张，有时回避、有时硬刚。' },
+    { high: '你很清楚对谁该说多少，交浅不言深。', mid: '你大体知道分寸，情绪上头时偶尔会多说几句。', low: '你容易交浅言深，或者把自己包得太紧。' },
+    { high: '你进新集体很快，是天生的破冰者。', mid: '你需要一点观察期，熟了之后就能放开。', low: '你融入得慢，更喜欢待在熟悉的小圈子。' }
+  ];
+
+  /* ============ 24 道情境题 ============ */
+  var QUESTIONS = [
+    { e: '🍶', q: '饭局上有人起哄劝你酒，你其实不太想喝，你会——', o: [
+      { t: '笑着说「我酒精过敏」，顺手端起茶杯回敬，既推了酒又不扫兴', type: 'rj' },
+      { t: '礼貌地说声「谢谢，我真不喝」，不解释也不勉强，安静地继续吃', type: 'sk' },
+      { t: '大方说「我以茶代酒」，笑着自嘲带过，不较真', type: 'xz' },
+      { t: '温和但坚定地说明「我今天确实不能喝，明天还有安排」', type: 'gz' }
+    ] },
+    { e: '🌙', q: '半夜 11 点，同事群里有人@你问工作上的事，你会——', o: [
+      { t: '回「收到，我看看」，然后开电脑处理，不耽误事', type: 'gz' },
+      { t: '看看不是火烧眉毛的事，先睡个好觉，第二天精神好再认真回', type: 'jn' },
+      { t: '先问一句「今晚非做不可吗」，确认了紧急程度再决定', type: 'xz' },
+      { t: '简单回个「收到」，不多说，细节明天上班再对', type: 'sk' }
+    ] },
+    { e: '🏠', q: '第一次去对象家见父母，你会——', o: [
+      { t: '提前问清对方父母的喜好，带一份贴心的小礼物', type: 'rj' },
+      { t: '提前做功课，把见面该注意的礼数都记在心里', type: 'gz' },
+      { t: '不刻意准备，真诚、自然地做自己就好', type: 'xz' },
+      { t: '话不多，但会主动帮忙端菜洗碗，用行动表达尊重', type: 'sk' }
+    ] },
+    { e: '🛗', q: '电梯里遇到不太熟的领导，电梯里只有你们俩，你会——', o: [
+      { t: '点头问好，顺带一句「您也这么晚下班」，自然聊两句', type: 'rj' },
+      { t: '礼貌地问声好，然后安静地站在一旁，不打扰', type: 'sk' },
+      { t: '点头示意一下，不刻意找话题，给彼此留点空间', type: 'jn' },
+      { t: '主动聊两句天气，把这段电梯时光轻松带过去', type: 'ys' }
+    ] },
+    { e: '💸', q: '朋友开口跟你借钱，数目不小，你会——', o: [
+      { t: '先问清用途和大概什么时候能还，再决定借多少', type: 'xz' },
+      { t: '看重这份情分，朋友开口就尽量帮，不盘问太多', type: 'sk' },
+      { t: '朋友有难先帮了再说，爽快转账，讲义气', type: 'ys' },
+      { t: '认真盘一下自己手头，顺手写个借条，大家都安心', type: 'gz' }
+    ] },
+    { e: '📱', q: '你被拉进一个全是陌生人的群聊，你会——', o: [
+      { t: '先潜水看看大家聊什么，摸清氛围再冒泡', type: 'xz' },
+      { t: '自来熟地打个招呼，发个表情包活跃一下', type: 'ys' },
+      { t: '看一眼，不感兴趣就设成免打扰，把精力留给重要的群', type: 'jn' },
+      { t: '礼貌地回一句「大家好」，之后多听少说', type: 'sk' }
+    ] },
+    { e: '🧾', q: '和朋友聚餐结束，没人主动提钱的事，你会——', o: [
+      { t: '主动说「那咱们 AA 吧，我来算一下」，把账理清楚', type: 'gz' },
+      { t: '笑着拉个群转账，还照顾到谁没点贵的菜', type: 'rj' },
+      { t: '不抢出风头，谁提就跟着转，图个简单省心', type: 'jn' },
+      { t: '豪爽地喊「这顿我请，下次你们请」', type: 'ys' }
+    ] },
+    { e: '😅', q: '饭桌上有人讲了个大家都没笑的笑话，气氛有点尴尬，你会——', o: [
+      { t: '配合地笑笑，再不动声色抛个新话题把场子接过去', type: 'rj' },
+      { t: '跟着大家笑一下，虽然没太懂，但礼貌上要到位', type: 'sk' },
+      { t: '接住这个梗再反抛一个更狠的，把气氛炒起来', type: 'ys' },
+      { t: '会认真地追问「笑点在哪儿呀」，一脸诚恳', type: 'gz' }
+    ] },
+    { e: '🫂', q: '朋友深夜发来一句「好累啊」，你会——', o: [
+      { t: '先发个抱抱，问「怎么了，跟我说说」', type: 'rj' },
+      { t: '认真帮 ta 分析处境，给出几条实在的建议', type: 'gz' },
+      { t: '回一句「辛苦了，早点休息」，给 ta 一点安静的空间', type: 'jn' },
+      { t: '陪 ta 聊到凌晨，只要 ta 需要我就在', type: 'ys' }
+    ] },
+    { e: '🍳', q: '开会时，同事把一件没做好的事当众甩锅给你，你会——', o: [
+      { t: '不撕破脸，笑着说「这块我们一起对一下」，把事实理清', type: 'rj' },
+      { t: '不当场争执，等散会后再私下找机会把事情说清楚', type: 'sk' },
+      { t: '直接说「这可不是我做的」，当场把话说开', type: 'ys' },
+      { t: '不慌，按流程和记录一项项核对，用事实说话', type: 'gz' }
+    ] },
+    { e: '🎈', q: '聚会突然冷场，大家各玩各的手机，你会——', o: [
+      { t: '抛一个大家都接得住的话题，把气氛带回来', type: 'rj' },
+      { t: '站起来张罗「我们玩个游戏吧」，把大家聚起来', type: 'ys' },
+      { t: '安静待着也不尴尬，谁有话题就接，没有就各玩各的', type: 'jn' },
+      { t: '安静地待着，等别人先开口，自己不着急', type: 'sk' }
+    ] },
+    { e: '👍', q: '领导刚发了一条朋友圈，你会——', o: [
+      { t: '点个赞，偶尔中肯地评论一句，不刻意', type: 'xz' },
+      { t: '热情地点赞评论，给足领导面子', type: 'rj' },
+      { t: '不刻意点赞，只在自己真心认可时评论', type: 'gz' },
+      { t: '不太关注这些，刷到就随缘，不纠结', type: 'jn' }
+    ] },
+    { e: '🎧', q: '朋友兴奋地安利一个你完全无感的东西，你会——', o: [
+      { t: '认真听完，说「虽然我不太吃这个，但你开心就好」', type: 'rj' },
+      { t: '如实说「我先记着」，把热情留给真正感兴趣的时候', type: 'jn' },
+      { t: '直接说「这我真欣赏不来」，但会好奇地问 ta 为什么喜欢', type: 'ys' },
+      { t: '认真了解了一下，再礼貌地说「可能不太适合我」', type: 'xz' }
+    ] },
+    { e: '🚗', q: '拼车时，司机师傅一直拉着你聊天，你会——', o: [
+      { t: '有一搭没一搭地接话，聊得来就聊，聊不动就安静', type: 'xz' },
+      { t: '陪着聊一路，下车时真诚地道声谢', type: 'ys' },
+      { t: '礼貌地回应几句，累了就自然地闭眼休息', type: 'sk' },
+      { t: '戴上耳机听自己的，享受这段独处时光', type: 'jn' }
+    ] },
+    { e: '⚡', q: '微信群里两个人突然吵起来了，你会——', o: [
+      { t: '私下分别劝和，不当众站队', type: 'xz' },
+      { t: '站出来说「大家先冷静，别在群里吵」，把事拉回正轨', type: 'gz' },
+      { t: '不掺和，等他们自己冷静，把精力留给重要的事', type: 'jn' },
+      { t: '忍不住说两句公道话，看不惯谁就直接点出来', type: 'ys' }
+    ] },
+    { e: '🏢', q: '刚入职新公司，中午吃饭没人叫你一起，你会——', o: [
+      { t: '先自己下楼随便吃点，慢慢观察再融入', type: 'xz' },
+      { t: '主动问旁边同事「中午带我一个呗」', type: 'ys' },
+      { t: '自己安安静静地吃，享受一段不用社交的放松时间', type: 'jn' },
+      { t: '研究附近所有餐厅，做出了一份觅食攻略', type: 'gz' }
+    ] },
+    { e: '💤', q: '朋友借你的钱一直没还，见面还只字不提，你会——', o: [
+      { t: '找个自然的机会，笑着提一嘴「上次那钱方便了不」', type: 'rj' },
+      { t: '先不提，相信 ta 有难处，等 ta 想起来', type: 'sk' },
+      { t: '直接说「兄弟，那钱是不是该还我了」', type: 'ys' },
+      { t: '认真地把这笔账和 ta 理清楚，免得大家都记岔', type: 'gz' }
+    ] },
+    { e: '🙊', q: '饭局上有人开始讲让你不舒服的段子，你会——', o: [
+      { t: '不跟着笑，巧妙地找个由头把话题引开', type: 'rj' },
+      { t: '心里不舒服，但会礼貌地保持沉默，不扫大家兴', type: 'sk' },
+      { t: '直接说「这我不太爱听，咱换个话题」，不委屈自己', type: 'xz' },
+      { t: '找个借口离席，把时间留给让自己舒服的环境', type: 'jn' }
+    ] },
+    { e: '🏆', q: '有人当众夸你「你太厉害了」，你会——', o: [
+      { t: '笑着回「还得谢谢你支持」，把功劳分一点给对方', type: 'rj' },
+      { t: '谦虚地摆手说「没有没有，我差远了」', type: 'sk' },
+      { t: '开心地接住，再自夸两句活跃气氛', type: 'ys' },
+      { t: '认真地说「其实主要是大家帮忙」，把话说实在', type: 'gz' }
+    ] },
+    { e: '🛋️', q: '周末你只想在家瘫着，朋友突然叫你出去聚会，你会——', o: [
+      { t: '婉拒「下次一定」，安心窝在家里充充电', type: 'jn' },
+      { t: '想想还是去吧，关系比一时的懒重要', type: 'sk' },
+      { t: '一听有局立刻满血，第一个报名', type: 'ys' },
+      { t: '问清楚有谁、去哪，合得来就去', type: 'xz' }
+    ] },
+    { e: '🍜', q: '和不熟的人拼桌吃饭，气氛微妙，你会——', o: [
+      { t: '自然地聊两句「他家这个不错」，聊得来就多聊', type: 'xz' },
+      { t: '主动搭话问「你点的这个好吃吗」，顺势聊起来', type: 'ys' },
+      { t: '安安静静吃自己的，享受一顿饭的专注', type: 'jn' },
+      { t: '礼貌问句「这里没人吧」，之后安静地各吃各的', type: 'sk' }
+    ] },
+    { e: '🙏', q: '一个不太熟的人突然找你帮一个不小的忙，你会——', o: [
+      { t: '先评估自己能不能帮、代价多大，再回复', type: 'xz' },
+      { t: '不太好意思直接拒绝，会先听听具体是什么忙', type: 'sk' },
+      { t: '爽快说「包在我身上」，尽力而为', type: 'ys' },
+      { t: '如实说「我能力有限，最多能帮到 XX」', type: 'gz' }
+    ] },
+    { e: '🎤', q: 'KTV 里大家起哄让你唱歌，你会——', o: [
+      { t: '大方接过麦，唱劈了也自嘲带过', type: 'ys' },
+      { t: '先摆手客气一下，被大家起哄了再上去', type: 'sk' },
+      { t: '点一首自己擅长的，稳稳拿下', type: 'xz' },
+      { t: '坐在角落打拍子，享受听别人唱的时光', type: 'jn' }
+    ] },
+    { e: '🥀', q: '一个好朋友最近突然对你很冷淡、回消息很慢，你会——', o: [
+      { t: '不质问，先发句「最近挺忙的吧」，给个台阶', type: 'rj' },
+      { t: '心里难受，但会先等一等，给彼此一点空间', type: 'sk' },
+      { t: '直接问「我是不是哪儿惹到你了」，把话说开', type: 'ys' },
+      { t: '认真想想是不是自己哪里没做好，再找机会聊聊', type: 'gz' }
+    ] }
+  ];
+
+  /* ============ 隐藏彩蛋：Q11选"张罗游戏" + Q20选"婉拒宅家" ============ */
+  var EGG = {
+    qA: 10, optA: 1,   // 第11题，选项B（站起来张罗游戏 = 野生）
+    qB: 19, optB: 0,   // 第20题，选项A（婉拒宅家 = 节能）
+    text: '你嘴上说着「下次一定」，身体却很诚实地想当那个暖场的人——表面是社交节能模式，骨子里藏着一颗野生社交家的灵魂。你的社交开关，只对「值得的局」亮起。'
+  };
+
+  /* ============ 状态 ============ */
+  var answers = new Array(QUESTIONS.length).fill(null);
+  var current = 0;
+
+  var els = {
+    password: document.getElementById('screen-password'),
+    welcome: document.getElementById('screen-welcome'),
+    quiz: document.getElementById('screen-quiz'),
+    result: document.getElementById('screen-result'),
+    pwdInput: document.getElementById('pwd-input'),
+    pwdWrap: document.getElementById('pwd-wrap'),
+    pwdHint: document.getElementById('pwd-hint'),
+    pwdBtn: document.getElementById('pwd-btn'),
+    startBtn: document.getElementById('start-btn'),
+    qCount: document.getElementById('q-count'),
+    qEmoji: document.getElementById('q-emoji'),
+    progressFill: document.getElementById('progress-fill'),
+    questionText: document.getElementById('question-text'),
+    options: document.getElementById('options'),
+    prevBtn: document.getElementById('prev-btn'),
+    nextBtn: document.getElementById('next-btn'),
+    typeEmoji: document.getElementById('type-emoji'),
+    typeName: document.getElementById('type-name'),
+    overall: document.getElementById('overall'),
+    resultSummary: document.getElementById('result-summary'),
+    resultKeywords: document.getElementById('result-keywords'),
+    subType: document.getElementById('sub-type'),
+    resultScene: document.getElementById('result-scene'),
+    resultStrength: document.getElementById('result-strength'),
+    resultBlind: document.getElementById('result-blind'),
+    resultAdvice: document.getElementById('result-advice'),
+    resultFormation: document.getElementById('result-formation'),
+    resultEgg: document.getElementById('result-egg'),
+    eggText: document.getElementById('egg-text'),
+    radarCard: document.getElementById('radar-card'),
+    dimCards: document.getElementById('dim-cards'),
+    restartBtn: document.getElementById('restart-btn'),
+    shareBtn: document.getElementById('share-btn')
+  };
+
+  function show(id) {
+    ['password', 'welcome', 'quiz', 'result'].forEach(function (k) {
+      els[k].classList.remove('active');
+    });
+    els[id].classList.add('active');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  /* ============ 密码 ============ */
+  function tryEnter() {
+    if (els.pwdInput.value === PASSWORD) {
+      els.pwdHint.textContent = '';
+      show('welcome');
+    } else {
+      els.pwdHint.textContent = '密码不对哦，再试一次吧 🌷';
+      els.pwdWrap.classList.remove('shake');
+      void els.pwdWrap.offsetWidth;
+      els.pwdWrap.classList.add('shake');
+      els.pwdInput.value = '';
+      els.pwdInput.focus();
+    }
+  }
+  els.pwdBtn.addEventListener('click', tryEnter);
+  els.pwdInput.addEventListener('keydown', function (e) { if (e.key === 'Enter') tryEnter(); });
+
+  /* ============ 答题 ============ */
+  function renderQuestion() {
+    var q = QUESTIONS[current];
+    els.qCount.textContent = '第 ' + (current + 1) + ' / ' + QUESTIONS.length + ' 题';
+    els.qEmoji.textContent = q.e;
+    els.questionText.textContent = q.q;
+    els.progressFill.style.width = ((current) / QUESTIONS.length * 100) + '%';
+    els.prevBtn.disabled = current === 0;
+
+    var html = '';
+    q.o.forEach(function (opt, i) {
+      var selected = answers[current] === i;
+      html += '<div class="opt' + (selected ? ' selected' : '') + '" data-i="' + i + '">' +
+        '<span class="mark">✓</span>' +
+        '<span>' + opt.t + '</span>' +
+        '</div>';
+    });
+    els.options.innerHTML = html;
+
+    Array.prototype.forEach.call(els.options.querySelectorAll('.opt'), function (node) {
+      node.addEventListener('click', function () {
+        var i = parseInt(node.getAttribute('data-i'), 10);
+        answers[current] = i;
+        Array.prototype.forEach.call(els.options.querySelectorAll('.opt'), function (n) {
+          n.classList.remove('selected');
+        });
+        node.classList.add('selected');
+        els.options.style.pointerEvents = 'none';
+        setTimeout(function () {
+          els.options.style.pointerEvents = '';
+          if (current === QUESTIONS.length - 1) showResult();
+          else { current++; renderQuestion(); }
+        }, 300);
+      });
+    });
+  }
+
+  els.prevBtn.addEventListener('click', function () {
+    if (current > 0) { current--; renderQuestion(); }
+  });
+  els.nextBtn.addEventListener('click', function () {
+    if (answers[current] == null) {
+      els.options.classList.remove('shake');
+      void els.options.offsetWidth;
+      els.options.classList.add('shake');
+      return;
+    }
+    if (current < QUESTIONS.length - 1) { current++; renderQuestion(); }
+  });
+  els.startBtn.addEventListener('click', function () {
+    show('quiz');
+    renderQuestion();
+  });
+
+  /* ============ 计算 ============ */
+  function computeRadar() {
+    var votes = { rj: 0, sk: 0, ys: 0, gz: 0, xz: 0, jn: 0 };
+    var total = 0;
+    for (var i = 0; i < QUESTIONS.length; i++) {
+      if (answers[i] != null) {
+        votes[QUESTIONS[i].o[answers[i]].type]++;
+        total++;
+      }
+    }
+    if (total === 0) total = 1;
+    var radar = [0, 0, 0, 0, 0];
+    Object.keys(votes).forEach(function (k) {
+      var w = votes[k] / total;
+      var sig = TYPES[k].sig;
+      for (var d = 0; d < 5; d++) radar[d] += sig[d] * w;
+    });
+    return { radar: radar.map(function (x) { return Math.round(x); }), votes: votes, total: total };
+  }
+
+  function dist(a, b) {
+    return Math.sqrt(a.reduce(function (s, x, i) { return s + (x - b[i]) * (x - b[i]); }, 0));
+  }
+
+  // 多数投票 + 最近原型兜底：按选项倾向得票最多的类型判定，平票时用雷达图就近归属
+  function classify(votes, radar) {
+    var max = 0, winners = [];
+    Object.keys(votes).forEach(function (k) {
+      if (votes[k] > max) { max = votes[k]; winners = [k]; }
+      else if (votes[k] === max) { winners.push(k); }
+    });
+    if (winners.length === 1) return winners[0];
+    var best = winners[0], bd = Infinity;
+    winners.forEach(function (k) {
+      var d = dist(radar, TYPES[k].sig);
+      if (d < bd) { bd = d; best = k; }
+    });
+    return best;
+  }
+
+  function reviewTier(score) {
+    if (score >= 65) return 'high';
+    if (score < 35) return 'low';
+    return 'mid';
+  }
+
+  function renderRadar(radar) {
+    var cx = 180, cy = 180, R = 104;
+    var angles = [-90, -18, 54, 126, 198]; // 五轴，从顶部顺时针
+    function pt(angleDeg, radius) {
+      var rad = angleDeg * Math.PI / 180;
+      return [cx + radius * Math.cos(rad), cy + radius * Math.sin(rad)];
+    }
+
+    var grid = '';
+    [25, 50, 75, 100].forEach(function (lv) {
+      var r = R * lv / 100;
+      var pts = angles.map(function (a) { return pt(a, r).join(','); });
+      grid += '<polygon points="' + pts.join(' ') + '" fill="none" stroke="#FFE0D6" stroke-width="1.5"/>';
+    });
+
+    var axisLines = angles.map(function (a) {
+      var p = pt(a, R);
+      return '<line x1="' + cx + '" y1="' + cy + '" x2="' + p[0] + '" y2="' + p[1] + '" stroke="#F2D3C9" stroke-width="1.5"/>';
+    }).join('');
+
+    var dataPts = angles.map(function (a, i) {
+      return pt(a, R * radar[i] / 100).join(',');
+    });
+    var dataPoly = '<polygon points="' + dataPts.join(' ') + '" fill="rgba(255,138,122,0.22)" stroke="#FF6A88" stroke-width="2.5" stroke-linejoin="round"/>';
+    var dots = angles.map(function (a, i) {
+      var p = pt(a, R * radar[i] / 100);
+      return '<circle cx="' + p[0] + '" cy="' + p[1] + '" r="4" fill="#FF6A88"/>';
+    }).join('');
+
+    var labels = angles.map(function (a, i) {
+      var p = pt(a, R + 26);
+      var cos = Math.cos(a * Math.PI / 180), sin = Math.sin(a * Math.PI / 180);
+      var anchor = cos > 0.35 ? 'start' : (cos < -0.35 ? 'end' : 'middle');
+      var y = p[1];
+      if (sin < -0.5) y -= 4; else if (sin > 0.5) y += 10;
+      return '<text x="' + p[0] + '" y="' + y + '" text-anchor="' + anchor + '" font-size="13" font-weight="700" fill="#4A3F3A">' + DIMS[i] + '</text>';
+    }).join('');
+
+    els.radarCard.innerHTML =
+      '<svg viewBox="0 0 360 360" role="img" aria-label="社会化程度五维雷达图">' +
+      grid + axisLines + dataPoly + dots + labels +
+      '</svg>';
+  }
+
+  function renderDimCards(radar) {
+    var html = '';
+    for (var i = 0; i < DIMS.length; i++) {
+      var tier = reviewTier(radar[i]);
+      html +=
+        '<div class="dim-card">' +
+          '<div class="dim-head"><span class="dim-name">' + DIMS[i] + '</span><span class="dim-score">' + radar[i] + ' 分</span></div>' +
+          '<div class="dim-bar"><div class="dim-bar-fill" data-w="' + radar[i] + '"></div></div>' +
+          '<div class="dim-review">' + DIM_REVIEWS[i][tier] + '</div>' +
+        '</div>';
+    }
+    els.dimCards.innerHTML = html;
+    requestAnimationFrame(function () {
+      Array.prototype.forEach.call(els.dimCards.querySelectorAll('.dim-bar-fill'), function (el) {
+        el.style.width = el.getAttribute('data-w') + '%';
+      });
+    });
+  }
+
+  function showResult() {
+    var res = computeRadar();
+    var radar = res.radar;
+    var type = classify(res.votes, radar);
+    var profile = PROFILES[type];
+    var info = TYPES[type];
+
+    els.typeEmoji.textContent = info.emoji;
+    els.typeName.textContent = info.name;
+    var overall = Math.round(radar.reduce(function (a, b) { return a + b; }, 0) / 5);
+    els.overall.textContent = '综合社会化熟练度 · 约 ' + overall + ' 分';
+
+    els.resultSummary.textContent = profile.summary;
+
+    var kwHtml = profile.keywords.map(function (k) { return '<span class="kw-chip">' + k + '</span>'; }).join('');
+    els.resultKeywords.innerHTML = kwHtml;
+
+    // 第二人格倾向
+    var order = Object.keys(res.votes).filter(function (k) { return res.votes[k] > 0; })
+      .sort(function (a, b) { return res.votes[b] - res.votes[a]; });
+    if (order.length > 1) {
+      els.subType.textContent = '你的另一面倾向：「' + TYPES[order[1]].name + '」';
+    } else {
+      els.subType.textContent = '';
+    }
+
+    els.resultScene.innerHTML = '<b class="tag">你可能会……</b>' + profile.scene;
+    els.resultStrength.innerHTML = '<b class="tag">你擅长</b>' + profile.strength;
+    els.resultBlind.innerHTML = '<b class="tag">你容易在</b>' + profile.blind;
+    els.resultAdvice.innerHTML = '<b>升级建议：</b>' + profile.advice;
+    els.resultFormation.innerHTML = '<b>这种社会化模式的形成可能：</b>' + profile.formation;
+
+    // 隐藏彩蛋
+    if (answers[EGG.qA] === EGG.optA && answers[EGG.qB] === EGG.optB) {
+      els.resultEgg.style.display = '';
+      els.eggText.textContent = EGG.text;
+    } else {
+      els.resultEgg.style.display = 'none';
+    }
+
+    renderRadar(radar);
+    renderDimCards(radar);
+    show('result');
+  }
+
+  /* ============ 重新开始 / 分享 ============ */
+  els.restartBtn.addEventListener('click', function () {
+    answers = new Array(QUESTIONS.length).fill(null);
+    current = 0;
+    show('welcome');
+  });
+
+  els.shareBtn.addEventListener('click', function () {
+    var res = computeRadar();
+    var type = classify(res.votes, res.radar);
+    var name = TYPES[type].name;
+    var text = '我刚测了「社会化程度」，测出来是「' + name + '」🎭 你呢？快来测测你在饭局、群聊里的生存技能 →';
+    if (navigator.share) {
+      navigator.share({ title: '社会化程度测试', text: text }).catch(function () {});
+    } else if (navigator.clipboard) {
+      navigator.clipboard.writeText(text).then(function () {
+        els.shareBtn.textContent = '已复制到剪贴板 ✓';
+        setTimeout(function () { els.shareBtn.textContent = '分享给朋友 💌'; }, 1800);
+      }).catch(function () {});
+    } else {
+      els.shareBtn.textContent = '长按复制这段文字吧~';
+    }
+  });
+
+})();
+</script>
+</body>
+</html>
